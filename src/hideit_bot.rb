@@ -30,7 +30,7 @@ def handle_inline_query(message, bot, messages)
         id = messages.insert_one({user: message.from.id, text: message.query, used: false, created_date: Time.now.utc}).inserted_id.to_s
         results = [
           ['1:'+id, 'Covered text', message_to_blocks(message.query), message_to_blocks(message.query)],
-          ['2:'+id, 'Generic message', 'Hidden Message','[[Hidden Message]]']
+          ['2:'+id, 'Generic message', '[[Hidden Message]]','[[Hidden Message]]']
         ].map do |arr|
             Telegram::Bot::Types::InlineQueryResultArticle.new(
                 id: arr[0],
