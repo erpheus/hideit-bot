@@ -87,7 +87,7 @@ Telegram::Bot::Client.run(token) do |bot|
 
 
                 when Telegram::Bot::Types::Message
-                    bot.api.send_message(chat_id: message.chat.id, text: "Hello, #{message.from.first_name}!\nThis bot should be used inline.")
+                    bot.api.send_message(chat_id: message.chat.id, text: "Hello, #{message.from.first_name}!\nThis bot should be used inline.\nType @hideItBot to start")
             end
             error_count = 0
         end
