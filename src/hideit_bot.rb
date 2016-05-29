@@ -104,7 +104,7 @@ rescue => e
         puts e.to_s
     }
     if error_count < 5
-        sleep(2)
+        sleep(1)
         retry
     else
         database_cleaner.stop
