@@ -1,0 +1,10 @@
+version: '2'
+services:
+  mongodb:
+    image: mongo
+    volumes:
+      - "./.data/db:/data/db"
+  bot:
+    build: .
+    links:
+      - mongodb
