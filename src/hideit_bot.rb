@@ -40,7 +40,7 @@ def handle_inline_query(message, bot, messages)
                 reply_markup: Telegram::Bot::Types::InlineKeyboardMarkup.new(
                     inline_keyboard: [
                         Telegram::Bot::Types::InlineKeyboardButton.new(
-                            text: 'Reveal',
+                            text: 'Read',
                             callback_data: id
                         )
                     ]
