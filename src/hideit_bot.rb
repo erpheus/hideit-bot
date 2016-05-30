@@ -24,8 +24,20 @@ end
 
 def handle_inline_query(message, bot, messages)
 
+    default_params = {}
+
     if message.query == ""
         results = []
+        default_params = {
+            switch_pm_text: 'How to use this bot',
+            switch_pm_parameter: 'howto'
+        }
+    elsif message.query.length > 200
+        results = []
+        default_params = {
+            switch_pm_text: 'Sorry, this message is too long, split it in two.',
+            switch_pm_parameter: 'toolong'
+        }
     else
         id = messages.insert_one({user: message.from.id, text: message.query, used: false, created_date: Time.now.utc}).inserted_id.to_s
         results = [
@@ -44,17 +56,17 @@ def handle_inline_query(message, bot, messages)
                             callback_data: id
                         )
                     ]
-                )
+                ),
             )
         end
     end
 
-    bot.api.answer_inline_query(
+    bot.api.answer_inline_query({
         inline_query_id: message.id,
         results: results,
         cache_time: 0,
         is_personal: true
-    )
+    }.merge!(default_params))
 
 end
 
@@ -87,8 +99,13 @@ Telegram::Bot::Client.run(token) do |bot|
 
 
                 when Telegram::Bot::Types::Message
-                    bot.api.send_message(chat_id: message.chat.id, text: "Hello, #{message.from.first_name}!\nThis bot should be used inline.\nType @hideItBot to start")
-                    bot.api.send_message(chat_id: message.chat.id, text: "You can use it to send a spoiler in a group conversation.")
+                    if message.text == "/start toolong"
+                        bot.api.send_message(chat_id: message.chat.id, text: "Unfortunately, due to telegram's api restrictions we cannot offer this functionality with messages over 200 characters. We'll try to find more options and contact telegram. Sorry for the inconvenience.")
+                    else
+                        bot.api.send_message(chat_id: message.chat.id, text: "Hello, #{message.from.first_name}!\nThis bot should be used inline.\nType @hideItBot to start")
+                        bot.api.send_message(chat_id: message.chat.id, text: "You can use it to send a spoiler in a group conversation.")
+                    end
+
             end
             error_count = 0
         end
