@@ -8,3 +8,4 @@ services:
     build: .
     links:
       - mongodb
+    env_file: tokens.env
