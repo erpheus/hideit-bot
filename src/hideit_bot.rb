@@ -35,7 +35,7 @@ def handle_inline_query(message, bot, messages)
     elsif message.query.length > 200
         results = []
         default_params = {
-            switch_pm_text: 'Sorry, this message is too long, split it in two.',
+            switch_pm_text: 'Sorry, this message is too long, split it to send.',
             switch_pm_parameter: 'toolong'
         }
     else
