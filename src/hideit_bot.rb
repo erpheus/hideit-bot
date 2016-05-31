@@ -1,8 +1,17 @@
 require 'telegram/bot'
+require 'telegram/bot/botan'
 require 'mongo'
 require 'daemons'
 
 include Mongo
+
+telegram_token = ENV['TELEGRAM_TOKEN']
+if not telegram_token or telegram_token == 'placeholder'
+    puts "Telegram token not provided. Write your token to tokens.env file."
+    exit
+end
+
+botan_token = ENV['BOTAN_TOKEN']
 
 Mongo::Logger.logger.level = ::Logger::FATAL
 
@@ -25,6 +34,7 @@ end
 def handle_inline_query(message, bot, messages)
 
     default_params = {}
+    id = nil
 
     if message.query == ""
         results = []
@@ -67,43 +77,52 @@ def handle_inline_query(message, bot, messages)
         cache_time: 0,
         is_personal: true
     }.merge!(default_params))
+    return id
 
 end
-
-token = File.open('Tokenfile', 'r') { |f| token = f.readline.chomp }
 
 error_count = 0
 
 begin
-Telegram::Bot::Client.run(token) do |bot|
+Telegram::Bot::Client.run(telegram_token) do |bot|
+    if botan_token and botan_token != 'placeholder'
+        bot.enable_botan!(botan_token)
+    end
     begin
         bot.listen do |message|
             case message
                 when Telegram::Bot::Types::InlineQuery
-                    handle_inline_query(message,bot,messages)
+                    id = handle_inline_query(message,bot,messages)
+                    bot.track('inline_query', message.from.id, {message_length: message.query.length, db_id: id})
 
                 when Telegram::Bot::Types::CallbackQuery
                     res = message.data
                     begin
                         res = messages.find("_id" => BSON::ObjectId(message.data)).to_a[0][:text]
                     rescue
+                        res = "Message not found in database. Sorry!"
                     end
                     bot.api.answer_callback_query(
                         callback_query_id: message.id,
                         text: res,
                         show_alert: true)
+                    bot.track('callback_query', message.from.id, {db_id: message.data})
 
                 when Telegram::Bot::Types::ChosenInlineResult
-                    messages.find("_id" => BSON::ObjectId(message.result_id.split(':')[1]))
+                    message_type, message_id = message.result_id.split(':')
+                    messages.find("_id" => BSON::ObjectId(message_id))
                             .update_one(:$set => {used: true})
+                    bot.track('chosen_inline', message.from.id, {db_id: message_id, chosen_type: message_type})
 
 
                 when Telegram::Bot::Types::Message
                     if message.text == "/start toolong"
                         bot.api.send_message(chat_id: message.chat.id, text: "Unfortunately, due to telegram's api restrictions we cannot offer this functionality with messages over 200 characters. We'll try to find more options and contact telegram. Sorry for the inconvenience.")
+                        bot.track('message', message.from.id, message_type: 'toolong')
                     else
                         bot.api.send_message(chat_id: message.chat.id, text: "Hello, #{message.from.first_name}!\nThis bot should be used inline.\nType @hideItBot to start")
                         bot.api.send_message(chat_id: message.chat.id, text: "You can use it to send a spoiler in a group conversation.")
+                        bot.track('message', message.from.id, message_type: 'hello')
                     end
 
             end
