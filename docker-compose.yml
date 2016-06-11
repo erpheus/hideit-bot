@@ -7,3 +7,6 @@ services:
     links:
       - mongodb
     dns: 8.8.8.8
+    env_file: tokens.env
+    ports:
+      - "8800:80"

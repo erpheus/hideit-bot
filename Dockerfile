@@ -5,4 +5,4 @@ COPY Gemfile Gemfile.lock ./
 RUN bundle
 
 COPY . .
-CMD ["ruby","src/hideit_bot.rb"]
+CMD ["ruby","src/long_polling.rb"]

@@ -8,3 +8,7 @@ services:
     build: .
     links:
       - mongodb
+    env_file: tokens.env
+    command: puma -b tcp://0.0.0.0:80 -e production src/server.ru
+    ports:
+      - "8801:80"
