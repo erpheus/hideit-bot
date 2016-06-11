@@ -6,6 +6,7 @@ require_relative 'config'
 module Hideit_bot
 
     class HideItBot
+        RegExpParcial = /(^|[^\\])\*(([^\*\\]|\\\*)+)\*/
 
         def self.start()
             Mongo::Logger.logger.level = ::Logger::FATAL
@@ -92,8 +93,24 @@ module Hideit_bot
 
         private
 
+        def save_message(message, covered:false)
+          if !covered
+            return @messages.insert_one({user: message.from.id, text: message.query, used: false, created_date: Time.now.utc}).inserted_id.to_s
+          else
+            return @messages.insert_one({user: message.from.id, text: message_clear_parcial(message.query), used: false, created_date: Time.now.utc}).inserted_id.to_s
+          end
+        end
+
         def message_to_blocks(message)
             return  message.gsub(/[^\s]/i, "\u2588")
+        end
+
+        def message_to_blocks_parcial(message)
+            return message.gsub(RegExpParcial) {|s| $1+message_to_blocks($2.gsub(/\*/, ""))}
+        end
+
+        def message_clear_parcial(message)
+          return message.gsub(RegExpParcial) {|s| $1+$2.gsub(/\\\*/, "*")}
         end
 
         def handle_inline_query(message)
@@ -114,26 +131,39 @@ module Hideit_bot
                     switch_pm_parameter: 'toolong'
                 }
             else
-                id = @messages.insert_one({user: message.from.id, text: message.query, used: false, created_date: Time.now.utc}).inserted_id.to_s
+
+              if message.query.index(RegExpParcial) == nil
+                id = save_message(message)
                 results = [
-                  ['1:'+id, 'Send covered text', message_to_blocks(message.query), message_to_blocks(message.query)],
-                  ['2:'+id, 'Send generic message', '[[Hidden Message]]','[[Hidden Message]]']
-                ].map do |arr|
-                    Telegram::Bot::Types::InlineQueryResultArticle.new(
-                        id: arr[0],
-                        title: arr[1],
-                        description: arr[2],
-                        input_message_content: Telegram::Bot::Types::InputTextMessageContent.new(message_text: arr[3]),
-                        reply_markup: Telegram::Bot::Types::InlineKeyboardMarkup.new(
-                            inline_keyboard: [
-                                Telegram::Bot::Types::InlineKeyboardButton.new(
-                                    text: 'Read',
-                                    callback_data: id
-                                )
-                            ]
-                        ),
-                    )
-                end
+                  [id, '1:'+id, 'Send covered text', message_to_blocks(message.query), message_to_blocks(message.query)],
+                  [id, '2:'+id, 'Send generic message', '[[Hidden Message]]','[[Hidden Message]]']
+                ]
+              else
+                id = save_message(message)
+                id_covered = save_message(message, covered:true)
+                results = [
+                  [id, '1:'+id, 'Send covered text', message_to_blocks(message.query), message_to_blocks(message.query)],
+                  [id_covered, '2:'+id_covered, 'Send parcially covered text', message_to_blocks_parcial(message.query), message_to_blocks_parcial(message.query)],
+                  [id, '3:'+id, 'Send generic message', '[[Hidden Message]]','[[Hidden Message]]']
+                ]
+              end
+
+              results =  results.map do |arr|
+                  Telegram::Bot::Types::InlineQueryResultArticle.new(
+                      id: arr[1],
+                      title: arr[2],
+                      description: arr[3],
+                      input_message_content: Telegram::Bot::Types::InputTextMessageContent.new(message_text: arr[4]),
+                      reply_markup: Telegram::Bot::Types::InlineKeyboardMarkup.new(
+                          inline_keyboard: [
+                              Telegram::Bot::Types::InlineKeyboardButton.new(
+                                  text: 'Read',
+                                  callback_data: arr[0]
+                              )
+                          ]
+                      ),
+                  )
+              end
             end
 
             @bot.api.answer_inline_query({
