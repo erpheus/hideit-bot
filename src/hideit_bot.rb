@@ -78,7 +78,7 @@ module Hideit_bot
                         end
                     else
                         @bot.api.send_message(chat_id: message.chat.id, text: "Hello, #{message.from.first_name}!\nThis bot should be used inline.\nType @hideItBot to start")
-                        @bot.api.send_message(chat_id: message.chat.id, text: "You can use it to send a spoiler in a group conversation.")
+                        @bot.api.send_message(chat_id: message.chat.id, text: "You can use it to send a spoiler in a group conversation.\nOr to send a message that wont be readable in the notification!.\nYou can use a pair of asterisk *to partially hidde text*. Try it! -> You can use a pair of asterisk ██ █████████ █████ ████. Try it!")
                         if BotConfig.has_botan_token
                           @bot.track('message', message.from.id, message_type: 'hello')
                         end
@@ -136,15 +136,15 @@ module Hideit_bot
                 id = save_message(message)
                 results = [
                   [id, '1:'+id, 'Send covered text', message_to_blocks(message.query), message_to_blocks(message.query)],
-                  [id, '2:'+id, 'Send generic message', '[[Hidden Message]]','[[Hidden Message]]']
+                  [id, '2:'+id, 'Send generic message', '❓❓❓','❓❓❓']
                 ]
               else
                 id = save_message(message)
                 id_covered = save_message(message, covered:true)
                 results = [
                   [id, '1:'+id, 'Send covered text', message_to_blocks(message.query), message_to_blocks(message.query)],
-                  [id_covered, '2:'+id_covered, 'Send parcially covered text', message_to_blocks_parcial(message.query), message_to_blocks_parcial(message.query)],
-                  [id, '3:'+id, 'Send generic message', '[[Hidden Message]]','[[Hidden Message]]']
+                  [id_covered, '2:'+id_covered, 'Send partially covered text', message_to_blocks_parcial(message.query), message_to_blocks_parcial(message.query)],
+                  [id, '3:'+id, 'Send generic message', '❓❓❓','❓❓❓']
                 ]
               end
 
