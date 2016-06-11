@@ -41,7 +41,9 @@ module Hideit_bot
             case message
                 when Telegram::Bot::Types::InlineQuery
                     id = handle_inline_query(message)
-                    @bot.track('inline_query', message.from.id, {message_length: message.query.length, db_id: id})
+                    if BotConfig.has_botan_token
+                      @bot.track('inline_query', message.from.id, {message_length: message.query.length, db_id: id})
+                    end
 
                 when Telegram::Bot::Types::CallbackQuery
                     res = message.data
@@ -54,23 +56,31 @@ module Hideit_bot
                         callback_query_id: message.id,
                         text: res,
                         show_alert: true)
-                    @bot.track('callback_query', message.from.id, {db_id: message.data})
+                    if BotConfig.has_botan_token
+                      @bot.track('callback_query', message.from.id, {db_id: message.data})
+                    end
 
                 when Telegram::Bot::Types::ChosenInlineResult
                     message_type, message_id = message.result_id.split(':')
                     @messages.find("_id" => BSON::ObjectId(message_id))
                             .update_one(:$set => {used: true})
-                    @bot.track('chosen_inline', message.from.id, {db_id: message_id, chosen_type: message_type})
+                    if BotConfig.has_botan_token
+                      @bot.track('chosen_inline', message.from.id, {db_id: message_id, chosen_type: message_type})
+                    end
 
 
                 when Telegram::Bot::Types::Message
                     if message.text == "/start toolong"
                         @bot.api.send_message(chat_id: message.chat.id, text: "Unfortunately, due to telegram's api restrictions we cannot offer this functionality with messages over 200 characters. We'll try to find more options and contact telegram. Sorry for the inconvenience.")
-                        @bot.track('message', message.from.id, message_type: 'toolong')
+                        if BotConfig.has_botan_token
+                          @bot.track('message', message.from.id, message_type: 'toolong')
+                        end
                     else
                         @bot.api.send_message(chat_id: message.chat.id, text: "Hello, #{message.from.first_name}!\nThis bot should be used inline.\nType @hideItBot to start")
                         @bot.api.send_message(chat_id: message.chat.id, text: "You can use it to send a spoiler in a group conversation.")
-                        @bot.track('message', message.from.id, message_type: 'hello')
+                        if BotConfig.has_botan_token
+                          @bot.track('message', message.from.id, message_type: 'hello')
+                        end
                     end
 
             end
@@ -135,5 +145,5 @@ module Hideit_bot
             return id
         end
     end
-    
+
 end
