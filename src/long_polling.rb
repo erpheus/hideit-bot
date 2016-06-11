@@ -2,7 +2,7 @@ require 'telegram/bot'
 require_relative 'hideit_bot'
 require_relative 'config'
 
-Config::require_tokens(server: true)
+BotConfig::require_tokens()
 
 error_count = 0
 
@@ -10,7 +10,7 @@ Hideit_bot::HideItBot.start()
 
 begin
 	bot = Hideit_bot::HideItBot.new()
- 
+
 	bot.listen do |message|
 		bot.process_update message
 		error_count = 0
