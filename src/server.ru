@@ -41,7 +41,7 @@ app = Proc.new do |env|
 			[200, {}, []]
 		end
 	else
-		return [200, {'Content-Type' => 'text/html'}, ['hello! bot here. You are not using a token nor a POST request']]
+		[200, {'Content-Type' => 'text/html'}, ['hello! bot here. You are not using a token nor a POST request']]
 	end
 end
 
