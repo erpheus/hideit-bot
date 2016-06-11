@@ -1,7 +1,7 @@
 require 'telegram/bot'
 require 'telegram/bot/botan'
 require 'mongo'
-require 'daemons'
+require_relative 'config'
 
 module Hideit_bot
 
@@ -10,26 +10,26 @@ module Hideit_bot
         def self.start()
             Mongo::Logger.logger.level = ::Logger::FATAL
 
-            @@database_cleaner = Daemons.call(:log_output => true) do
+            @@database_cleaner = Thread.new do
                 # clean unused data
                 mongoc = Mongo::Client.new("mongodb://mongodb:27017/hideitbot")
+                counter = 0 # Only run every 30 seconds but sleep one second at a time
                 loop do
-                    sleep 30
-                    mongoc[:messages].delete_many(:used => false, :created_date => {:$lte => (Time.now - 30).utc})
+                    sleep 1
+                    counter = (counter + 1) % 30
+                    if counter == 29
+                        mongoc[:messages].delete_many(:used => false, :created_date => {:$lte => (Time.now - 30).utc})
+                    end
                 end
             end
         end
 
-        def self.end()
-            @@database_cleaner.stop
-        end
+        def initialize()
+            @bot = Telegram::Bot::Client.new(BotConfig::Telegram_token)
+            @messages = Mongo::Client.new("mongodb://mongodb:27017/hideitbot", :pool_size => 5, :timeout => 5)[:messages]
 
-        def initialize(token: nil, botan_token: nil)
-            @bot = Telegram::Bot::Client.new(token)
-            @messages = Mongo::Client.new("mongodb://mongodb:27017/hideitbot")[:messages]
-
-            if botan_token and botan_token != 'placeholder'
-                @bot.enable_botan!(botan_token)
+            if BotConfig.has_botan_token
+                @bot.enable_botan!(BotConfig::Botan_token)
             end
         end
 
@@ -74,6 +74,10 @@ module Hideit_bot
                     end
 
             end
+        end
+
+        def set_webhook(url)
+            @bot.api.set_webhook(url: url)
         end
 
         private
