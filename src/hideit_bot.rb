@@ -79,12 +79,17 @@ module Hideit_bot
 
 
                 when Telegram::Bot::Types::Message
+                    if message.left_chat_member or message.new_chat_member or message.new_chat_title or message.delete_chat_photo or message.group_chat_created or message.supergroup_chat_created or message.channel_chat_created or message.migrate_to_chat_id or message.migrate_from_chat_id or message.pinned_message
+                      return
+                    end
+
+
                     if message.text == "/start toolong"
                         @bot.api.send_message(chat_id: message.chat.id, text: "Unfortunately, due to telegram's api restrictions we cannot offer this functionality with messages over 200 characters. We'll try to find more options and contact telegram. Sorry for the inconvenience.")
                         if BotConfig.has_botan_token
                           @bot.track('message', message.from.id, message_type: 'toolong')
                         end
-                    else
+                    elsif message.text == "/start"
                         @bot.api.send_message(chat_id: message.chat.id, text: "Hello, #{message.from.first_name}!\nThis bot should be used inline.\nType @hideItBot to start")
                         @bot.api.send_message(chat_id: message.chat.id, text: "You can use it to send a spoiler in a group conversation.\nOr to send a message that won't be readable in notifications!\nYou can hide only *parts of the message* enclosing them in asterisks.\nExample:\n")
                         @bot.api.send_message(
