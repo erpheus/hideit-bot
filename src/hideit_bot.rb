@@ -132,20 +132,17 @@ module Hideit_bot
                 }
             else
 
-              if message.query.index(RegExpParcial) == nil
-                id = save_message(message)
-                results = [
-                  [id, '1:'+id, 'Send covered text', message_to_blocks(message.query), message_to_blocks(message.query)],
-                  [id, '2:'+id, 'Send generic message', '❓❓❓','❓❓❓']
-                ]
-              else
-                id = save_message(message)
+              id = save_message(message)
+              results = [
+                [id, 'cover:'+id, 'Send covered text', message_to_blocks(message.query), message_to_blocks(message.query)],
+                [id, 'generic:'+id, 'Send generic message', '❓❓❓','❓❓❓']
+              ]
+
+              if message.query.index(RegExpParcial)
                 id_covered = save_message(message, covered:true)
-                results = [
-                  [id, '1:'+id, 'Send covered text', message_to_blocks(message.query), message_to_blocks(message.query)],
-                  [id_covered, '2:'+id_covered, 'Send partially covered text', message_to_blocks_parcial(message.query), message_to_blocks_parcial(message.query)],
-                  [id, '3:'+id, 'Send generic message', '❓❓❓','❓❓❓']
-                ]
+                results.insert(1,
+                  [id_covered, 'partial:'+id_covered, 'Send partially covered text', message_to_blocks_parcial(message.query), message_to_blocks_parcial(message.query)],
+                )
               end
 
               results =  results.map do |arr|
