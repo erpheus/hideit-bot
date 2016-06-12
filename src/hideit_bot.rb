@@ -93,12 +93,8 @@ module Hideit_bot
 
         private
 
-        def save_message(message, covered:false)
-          if !covered
-            return @messages.insert_one({user: message.from.id, text: message.query, used: false, created_date: Time.now.utc}).inserted_id.to_s
-          else
-            return @messages.insert_one({user: message.from.id, text: message_clear_parcial(message.query), used: false, created_date: Time.now.utc}).inserted_id.to_s
-          end
+        def save_message(message, text)
+            return @messages.insert_one({user: message.from.id, text: text, used: false, created_date: Time.now.utc}).inserted_id.to_s
         end
 
         def message_to_blocks(message)
@@ -132,14 +128,14 @@ module Hideit_bot
                 }
             else
 
-              id = save_message(message)
+              id = save_message(message, message.query)
               results = [
                 [id, 'cover:'+id, 'Send covered text', message_to_blocks(message.query), message_to_blocks(message.query)],
                 [id, 'generic:'+id, 'Send generic message', '❓❓❓','❓❓❓']
               ]
 
               if message.query.index(RegExpParcial)
-                id_covered = save_message(message, covered:true)
+                id_covered = save_message(message, message_clear_parcial(message.query))
                 results.insert(1,
                   [id_covered, 'partial:'+id_covered, 'Send partially covered text', message_to_blocks_parcial(message.query), message_to_blocks_parcial(message.query)],
                 )
