@@ -6,7 +6,7 @@ require_relative 'config'
 module Hideit_bot
 
     class HideItBot
-        RegExpParcial = /(^|[^\\])\*(([^\*\\]|\\\*)+)\*/
+        RegExpParcial = /(^|[^\\])\*(([^\*]|\\\*)*([^\*\\]|\\\*))\*/
 
         def self.start()
             Mongo::Logger.logger.level = ::Logger::FATAL
