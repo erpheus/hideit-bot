@@ -7,6 +7,7 @@ module Hideit_bot
 
     class HideItBot
         RegExpParcial = /(^|[^\\])\*(([^\*]|\\\*)*([^\*\\]|\\\*))\*/
+        Welcome_message = "Hello world!"
 
         def self.start()
             Mongo::Logger.logger.level = ::Logger::FATAL
@@ -27,7 +28,14 @@ module Hideit_bot
 
         def initialize()
             @bot = Telegram::Bot::Client.new(BotConfig::Telegram_token)
-            @messages = Mongo::Client.new("mongodb://mongodb:27017/hideitbot", :pool_size => 5, :timeout => 5)[:messages]
+            @messages = Mongo::Client.new("mongodb://mongodb:27017/hideitbot")[:messages]
+
+            rootMessage = @messages.find(:text => Welcome_message)
+            if rootMessage.count == 0
+              @rootMessageId = save_message(0, Welcome_message, used:true)
+            else
+              @rootMessageId = rootMessage.to_a[0]["_id"].to_s
+            end
 
             if BotConfig.has_botan_token
                 @bot.enable_botan!(BotConfig::Botan_token)
@@ -78,7 +86,19 @@ module Hideit_bot
                         end
                     else
                         @bot.api.send_message(chat_id: message.chat.id, text: "Hello, #{message.from.first_name}!\nThis bot should be used inline.\nType @hideItBot to start")
-                        @bot.api.send_message(chat_id: message.chat.id, text: "You can use it to send a spoiler in a group conversation.\nOr to send a message that wont be readable in the notification!.\nYou can use a pair of asterisk *to partially hidde text*. Try it! -> You can use a pair of asterisk ██ █████████ █████ ████. Try it!")
+                        @bot.api.send_message(chat_id: message.chat.id, text: "You can use it to send a spoiler in a group conversation.\nOr to send a message that won't be readable in notifications!\nYou can hide only *parts of the message* enclosing them in asterisks.\nExample:\n")
+                        @bot.api.send_message(
+                          chat_id: message.chat.id,
+                          text: message_to_blocks(Welcome_message),
+                          reply_markup: Telegram::Bot::Types::InlineKeyboardMarkup.new(
+                              inline_keyboard: [
+                                  Telegram::Bot::Types::InlineKeyboardButton.new(
+                                      text: 'Read',
+                                      callback_data: @rootMessageId
+                                  )
+                              ]
+                          )
+                        )
                         if BotConfig.has_botan_token
                           @bot.track('message', message.from.id, message_type: 'hello')
                         end
@@ -93,8 +113,8 @@ module Hideit_bot
 
         private
 
-        def save_message(message, text)
-            return @messages.insert_one({user: message.from.id, text: text, used: false, created_date: Time.now.utc}).inserted_id.to_s
+        def save_message(from, text, used: false)
+            return @messages.insert_one({user: from, text: text, used: used, created_date: Time.now.utc}).inserted_id.to_s
         end
 
         def message_to_blocks(message)
@@ -128,14 +148,14 @@ module Hideit_bot
                 }
             else
 
-              id = save_message(message, message.query)
+              id = save_message(message.from.id, message.query)
               results = [
                 [id, 'cover:'+id, 'Send covered text', message_to_blocks(message.query), message_to_blocks(message.query)],
                 [id, 'generic:'+id, 'Send generic message', '❓❓❓','❓❓❓']
               ]
 
               if message.query.index(RegExpParcial)
-                id_covered = save_message(message, message_clear_parcial(message.query))
+                id_covered = save_message(message.from.id, message_clear_parcial(message.query))
                 results.insert(1,
                   [id_covered, 'partial:'+id_covered, 'Send partially covered text', message_to_blocks_parcial(message.query), message_to_blocks_parcial(message.query)],
                 )
