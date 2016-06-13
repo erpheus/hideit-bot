@@ -47,6 +47,8 @@ module Hideit_bot
         end
 
         def process_update(message)
+          begin
+
             case message
                 when Telegram::Bot::Types::InlineQuery
                     id = handle_inline_query(message)
@@ -110,6 +112,9 @@ module Hideit_bot
                     end
 
             end
+          rescue Telegram::Bot::Exceptions::ResponseError => e
+            puts "Telegram answered with error. Continuing"
+          end
         end
 
         def set_webhook(url)
