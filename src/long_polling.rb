@@ -11,6 +11,8 @@ Hideit_bot::HideItBot.start()
 begin
 	bot = Hideit_bot::HideItBot.new()
 
+    bot.set_webhook("")
+
 	bot.listen do |message|
 		bot.process_update message
 		error_count = 0
