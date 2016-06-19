@@ -113,7 +113,7 @@ module Hideit_bot
 
             end
           rescue Telegram::Bot::Exceptions::ResponseError => e
-            puts "Telegram answered with error. Continuing"
+            puts "Telegram answered with error #{e}. Continuing"
           end
         end
 
