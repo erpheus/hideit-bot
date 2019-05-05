@@ -1,3 +1,4 @@
-Tokenfile
-tokens.env
+deploy.env
 .data/
+src/deps
+generated-stack.yaml

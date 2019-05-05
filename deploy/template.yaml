@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: HideItBot, a helpful telegram inline bot.
+
+Parameters: 
+  TelegramToken: 
+    Type: String
+    NoEcho: true
+
+Resources:
+  botresponder:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.6
+      CodeUri: ../src
+      Description: Telegram request receiver lambda
+      MemorySize: 128
+      Timeout: 3
+      Environment:
+        Variables:
+          TELEGRAM_TOKEN: !Ref TelegramToken
+      Events:
+        TelegramInteraction:
+          Type: Api
+          Properties:
+            Path: '/'
+            Method: any
+            RestApiId: !Ref api
+#      Policies:
+#        - SESSendBouncePolicy:
+#            IdentityName: !Ref IdentityNameParameter
+
+  api:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: 'prod'
+
+
+Outputs:
+  LambdaFunction:
+    Description: Lambda function ID
+    Value: !Ref botresponder
+  Endpoint:
+    Description: Url to access the api
+    Value: !Sub "https://${api}.execute-api.${AWS::Region}.amazonaws.com/prod/"
