@@ -1,8 +1,14 @@
+.data
+deploy
+Makefile
+Dockerfile
+LICENSE
+README.md
+.gitignore
 deploy.env
 local.env
-.data/
+.dockerignore
 src/deps
-generated-stack.yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

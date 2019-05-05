@@ -1,0 +1,9 @@
+version: '2'
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: local/Dockerfile
+    env_file: local/local.env
+    volumes:
+      - "./src/bot:/usr/src/app/bot"

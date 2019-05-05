@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -o allexport
-source ./deploy.env
+source ./deploy/deploy.env
 set +o allexport
 
 echo "https://api.telegram.org/bot${TelegramToken}/setWebhook"
