@@ -1,4 +1,5 @@
 import logging
+from bot.database import Database
 from telegram.ext import CommandHandler, MessageHandler, Filters
 
 logger = logging.getLogger(__name__)
@@ -8,15 +9,17 @@ logger = logging.getLogger(__name__)
 
 handlers = []
 
+
 def handler(h_type, *args):
-	def wrapper(f):
-		handlers.append((h_type, args, f))
-		return f
-	return wrapper
+    def wrapper(f):
+        handlers.append((h_type, args, f))
+        return f
+    return wrapper
+
 
 def set_up(dispatcher):
-	for h_type, args, f in handlers:
-		dispatcher.add_handler(h_type(*args, f))
+    for h_type, args, f in handlers:
+        dispatcher.add_handler(h_type(*args, f))
 
 
 ####   HANDLERS   ####
@@ -29,5 +32,8 @@ def start(update, context):
 
 @handler(MessageHandler, Filters.text)
 def echo(update, context):
-    update.message.reply_text(f"{update.message.chat.first_name} said: {update.message.text}")
+    # logging.debug('This is a debug message: ' + update.message.message_id)
+    Database.store_index(str(update.message.message_id), update.message.text)
+    text = Database.read_index(str(update.message.message_id))
+    update.message.reply_text(f"{update.message.chat.first_name} shouts: {text}")
     logger.info("echoed")

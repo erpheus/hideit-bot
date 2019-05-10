@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 logger.info("Starting standalone bot via long-polling.")
 
-TELEGRAM_TOKEN=os.getenv('TelegramToken')
+TELEGRAM_TOKEN = os.getenv('TelegramToken')
 updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
 dispatcher = updater.dispatcher
 

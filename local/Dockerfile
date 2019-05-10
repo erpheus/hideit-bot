@@ -5,7 +5,7 @@ RUN pip install watchdog
 WORKDIR /usr/src/app
 
 COPY src/requirements.txt ./
-RUN pip install -r requirements.txt -t ./deps
+RUN pip install -r requirements.txt -t ./deps && pip install boto3
 
 COPY src ./
 
